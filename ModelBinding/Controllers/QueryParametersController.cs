@@ -32,22 +32,6 @@ public partial class QueryParametersController : ControllerBase
         QueryParameters.OrderBy = orderBy;
         QueryParameters.IsConjunction = isConjunction;
 
-        if (orderBy is not null)
-        {
-            switch (QueryParameters.OrderBy)
-            {
-                case "column":
-                    _ = QueryParameters.FilterParametersList.OrderBy(x => x.Column);
-                    break;
-                case "value":
-                    _ = QueryParameters.FilterParametersList.OrderBy(x => x.Value);
-                    break;
-                case "type":
-                    _ = QueryParameters.FilterParametersList.OrderBy(x => x.Type);
-                    break;
-            }
-        }
-        
         return QueryParameters;
     }
 }
