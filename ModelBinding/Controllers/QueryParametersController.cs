@@ -12,27 +12,24 @@ public partial class QueryParametersController : ControllerBase
     public QueryParameters QueryParameters { get; set; } = new();
 
 
-    [HttpPost]
-    public QueryParameters Post([ModelBinder(BinderType = typeof(QueryParameterModelBinder))] IList<FilterParameters> parameters, string? orderBy, bool? descending, bool? isConjunction)
+    [HttpGet]
+    public QueryParameters Get([ModelBinder(BinderType = typeof(QueryParameterModelBinder))] QueryParameters queryParameters)
     {
-        for (int i = 0; i < parameters.Count; i++)
-        {
-            var filters = new FilterParameters
-            {
-                Column = parameters[i].Column,
-                Value = parameters[i].Value,
-                Type = parameters[i].Type
-            };
+        List<Person> people = new();
 
-            FilterParameters.Add(filters);
-        }
+        people.Add(new Person(1, "Iwan", "9312345678"));
+        people.Add(new Person(2, "Zaprqn", "9412345678"));
+        people.Add(new Person(3, "Dragan", "9354325678"));
+        people.Add(new Person(4, "Petkan", "94888845678"));
 
-        QueryParameters.FilterParametersList = FilterParameters;
-        QueryParameters.Descending = descending;
-        QueryParameters.OrderBy = orderBy;
-        QueryParameters.IsConjunction = isConjunction;
+        FilterParameters first = new();
+        first.Column = "EGN";
+        first.Value = "93";
+        first.Type = "startsWith";
 
-        return QueryParameters;
+        // queryParameters.FilterParametersList.Where(x => x.Value == people.).Select(p => p.Egn.StartsWith(x.Value)));
+
+        return queryParameters;
     }
 }
 
@@ -44,31 +41,44 @@ public class QueryParameterModelBinder : IModelBinder
         {
             throw new ArgumentNullException(nameof(bindingContext));
         }
-        // Check the value sent in
-        ValueProviderResult valueProviderResult = bindingContext.ValueProvider.GetValue("filters");
 
-        if (valueProviderResult == ValueProviderResult.None)
+        ValueProviderResult filtersValueProviderResult = bindingContext.ValueProvider.GetValue("filters");
+        ValueProviderResult orderByValueProviderResult = bindingContext.ValueProvider.GetValue("orderBy");
+        ValueProviderResult descendingValueProviderResult = bindingContext.ValueProvider.GetValue("descending");
+        ValueProviderResult isConjunctionValueProviderResult = bindingContext.ValueProvider.GetValue("isConjunction");
+
+        if (filtersValueProviderResult == ValueProviderResult.None)
         {
             bindingContext.Result = ModelBindingResult.Failed();
             return Task.CompletedTask;
         }
 
-        // Attempt to convert the input value
-        string? valueAsString = valueProviderResult.FirstValue;
-        if (valueAsString is null)
+        string? filtersValueAsString = filtersValueProviderResult.FirstValue;
+
+        if (filtersValueAsString is null)
         {
             bindingContext.Result = ModelBindingResult.Failed();
             return Task.CompletedTask;
         }
 
-        IList<FilterParameters>? filters = JsonConvert.DeserializeObject<IList<FilterParameters>>(valueAsString);
-        if (filters is null)
+        List<FilterParameters>? filters = JsonConvert.DeserializeObject<List<FilterParameters>>(filtersValueAsString);
+
+        QueryParameters queryParameters = new()
+        {
+            OrderBy = orderByValueProviderResult.FirstValue,
+            Descending = bool.Parse(descendingValueProviderResult.FirstValue),
+            IsConjunction = bool.Parse(isConjunctionValueProviderResult.FirstValue),
+            FilterParametersList = filters
+        };
+
+        if (queryParameters is null)
         {
             bindingContext.Result = ModelBindingResult.Failed();
             return Task.CompletedTask;
         }
 
-        bindingContext.Result = ModelBindingResult.Success(filters);
+        bindingContext.Result = ModelBindingResult.Success(queryParameters);
+
         return Task.CompletedTask;
     }
 }
