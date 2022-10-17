@@ -15,8 +15,20 @@ public partial class QueryParametersController : ControllerBase
         people.Add(new Person(people.Count + 1, "Slava", "9320574829"));
         people.Add(new Person(people.Count + 1, "Prava", "9413072388"));
 
+        List<FilterParameters> filters = queryParameters.FilterParametersList;
 
-        FilterParameters? filters = queryParameters.FilterParametersList.FirstOrDefault();
+        foreach (var filter in filters)
+        {
+            List<Person> result = new();
+
+            switch (filter.Type) 
+            {
+                
+            }
+        }
+        return people;
+
+/*        FilterParameters? filters = queryParameters.FilterParametersList.FirstOrDefault();
 
         List<Person> result = new();
 
@@ -42,7 +54,7 @@ public partial class QueryParametersController : ControllerBase
             return ordredResult;
         }
         
-        return result;
+        return result;*/
     }
 
     // TODO expressions, delegates, functions, lambdas
