@@ -8,80 +8,46 @@ namespace ModelBinding.Controllers;
 [Route("[controller]")]
 public partial class QueryParametersController : ControllerBase
 {
-    public List<FilterParameters> FilterParameters { get; set; } = new();
-    public QueryParameters QueryParameters { get; set; } = new();
-
-
-    [HttpGet]
-    public string Get([ModelBinder(BinderType = typeof(QueryParameterModelBinder))] QueryParameters queryParameters)
+    [HttpPost]
+    public List<Person> Post([ModelBinder(BinderType = typeof(QueryParameterModelBinder))] QueryParameters queryParameters, List<Person> people)
     {
-        List<Person> people = new();
+        people.Add(new Person(people.Count + 1, "Korava", "9459049285"));
+        people.Add(new Person(people.Count + 1, "Slava", "9320574829"));
+        people.Add(new Person(people.Count + 1, "Prava", "9413072388"));
 
-        people.Add(new Person(1, "Iwan", "9312345678"));
-        people.Add(new Person(2, "Zaprqn", "9412345678"));
-        people.Add(new Person(3, "Dragan", "9354325678"));
-        people.Add(new Person(4, "Petkan", "94888845678"));
-        
-        List<FilterParameters> first = queryParameters.FilterParametersList;
-       
-        people.Select(p => p.).Where(p => p.StartsWith(first.FirstOrDefault().Value));
 
-        foreach (var person in people)
+        FilterParameters? filters = queryParameters.FilterParametersList.FirstOrDefault();
+
+        List<Person> result = new();
+
+        switch (filters!.Type) 
         {
-            return $"Name: {person.Name}";
+            case "startswith":
+                result = people.Where(p => p.Egn.StartsWith(filters.Value)).ToList();
+                break;
+            case "endswith":
+                result = people.Where(p => p.Egn.EndsWith(filters.Value)).ToList();
+                break;
+            case "contains":
+                result = people.Where(p => p.Egn.Contains(filters.Value)).ToList();
+                break;
         }
 
-        return "";
+        if (queryParameters.Descending == true)
+        {
+            var ordredResult = new List<Person>();
+
+            ordredResult = result.OrderByDescending(x => x.Id).ToList();
+
+            return ordredResult;
+        }
+        
+        return result;
     }
 
     // TODO expressions, delegates, functions, lambdas
 
-    private static IQueryable<Person> FilterTasks(QueryParameters parameters, IQueryable<Person> tasks)
-    {
-
-        List<FilterParameters> filters = parameters.FilterParametersList;
-
-        /*if (parameters.FilterParametersList.Type is not null)
-        {
-            tasks = tasks.Where(x => x.Title.Contains(parameters.Title));
-        }
-
-        if (parameters.TypeId is not null)
-        {
-            tasks = tasks.Where(x => x.TypeId == parameters.TypeId);
-        }
-
-        if (parameters.StatusId is not null)
-        {
-            tasks = tasks.Where(x => x.StatusId == parameters.StatusId);
-        }
-
-        if (parameters.PriorityId is not null)
-        {
-            tasks = tasks.Where(x => x.PriorityId == parameters.PriorityId);
-        }
-
-        if (parameters.ImpactId is not null)
-        {
-            tasks = tasks.Where(x => x.ImpactId == parameters.ImpactId);
-        }*/
-        return tasks;
-    }
-
-    /*tasks = FilterTasks(parameters, tasks);
-
-    tasks = parameters.OrderBy?.ToLower() switch
-        {
-            QueryParameters.OrderByTitle => tasks.OrderBy(x => x.Title),
-            QueryParameters.OrderByType => tasks.OrderBy(x => x.Type),
-            QueryParameters.OrderByStatus => tasks.OrderBy(x => x.Status),
-            QueryParameters.OrderByPriority => tasks.OrderBy(x => x.Priority),
-            QueryParameters.OrderByImpact => tasks.OrderBy(x => x.Impact),
-            _ => tasks.OrderBy(x => x.Id)
-        };*/
-
 }
-
 
 public class QueryParameterModelBinder : IModelBinder
 {
@@ -116,9 +82,9 @@ public class QueryParameterModelBinder : IModelBinder
         QueryParameters queryParameters = new()
         {
             OrderBy = orderByValueProviderResult.FirstValue,
-            Descending = bool.Parse(descendingValueProviderResult.FirstValue),
-            IsConjunction = bool.Parse(isConjunctionValueProviderResult.FirstValue),
-            FilterParametersList = filters
+            Descending = bool.Parse(descendingValueProviderResult.FirstValue!),
+            IsConjunction = bool.Parse(isConjunctionValueProviderResult.FirstValue!),
+            FilterParametersList = filters!
         };
 
         if (queryParameters is null)
