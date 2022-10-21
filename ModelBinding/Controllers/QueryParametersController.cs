@@ -1,60 +1,62 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Newtonsoft.Json;
+using System.Reflection;
 
 namespace ModelBinding.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public partial class QueryParametersController : ControllerBase
+public class QueryParametersController : ControllerBase
 {
-    [HttpPost]
-    public List<Person> Post([ModelBinder(BinderType = typeof(QueryParameterModelBinder))] QueryParameters queryParameters, List<Person> people)
+    [HttpGet]
+    public IList<Person> Get([ModelBinder(BinderType = typeof(QueryParameterModelBinder))] QueryParameters queryParameters, IList<Person> people)
     {
-        people.Add(new Person(people.Count + 1, "Korava", "9459049285"));
+        people.Add(new Person(people.Count + 1, "Krava", "9402495038"));
         people.Add(new Person(people.Count + 1, "Slava", "9320574829"));
         people.Add(new Person(people.Count + 1, "Prava", "9413072388"));
 
-        List<FilterParameters> filters = queryParameters.FilterParametersList;
+        List<FilterParameters?> filters = queryParameters.FilterParametersList.ToList();
+
+        Type type = typeof(Person);
+        PropertyInfo[] propertyInfo = type.GetProperties();
+
+        List<string> properties = new();
+        foreach (PropertyInfo property in propertyInfo)
+        {
+            properties.Add(property.Name);
+        }
 
         foreach (var filter in filters)
         {
-            List<Person> result = new();
+            var column = filter!.Column;
 
-            switch (filter.Type) 
+            switch (filter!.Type)
             {
-                
+                case "startswith":
+                    people = people.Where(obj => obj.GetType().GetProperty(column)!.GetValue(obj)!.ToString()!.StartsWith(filter.Value)).ToList();
+                    break;
+                case "endswith":
+                    people = people.Where(obj => obj.GetType().GetProperty(column)!.GetValue(obj)!.ToString()!.EndsWith(filter.Value)).ToList();
+                    break;
+                case "contains":
+                    people = people.Where(p => p.Egn.Contains(filter.Value)).ToList();
+                    break;
             }
+
         }
-        return people;
-
-/*        FilterParameters? filters = queryParameters.FilterParametersList.FirstOrDefault();
-
-        List<Person> result = new();
-
-        switch (filters!.Type) 
-        {
-            case "startswith":
-                result = people.Where(p => p.Egn.StartsWith(filters.Value)).ToList();
-                break;
-            case "endswith":
-                result = people.Where(p => p.Egn.EndsWith(filters.Value)).ToList();
-                break;
-            case "contains":
-                result = people.Where(p => p.Egn.Contains(filters.Value)).ToList();
-                break;
-        }
-
+        
         if (queryParameters.Descending == true)
         {
             var ordredResult = new List<Person>();
 
-            ordredResult = result.OrderByDescending(x => x.Id).ToList();
+            ordredResult = people.OrderByDescending(x => x.Id).ToList();
 
             return ordredResult;
         }
-        
-        return result;*/
+
+        return people;
+
     }
 
     // TODO expressions, delegates, functions, lambdas
