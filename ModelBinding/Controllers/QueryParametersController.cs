@@ -18,15 +18,6 @@ public class QueryParametersController : ControllerBase
 
         List<FilterParameters?> filters = queryParameters.FilterParametersList.ToList();
 
-        Type type = typeof(Person);
-        PropertyInfo[] propertyInfo = type.GetProperties();
-
-        List<string> properties = new();
-        foreach (PropertyInfo property in propertyInfo)
-        {
-            properties.Add(property.Name);
-        }
-
         foreach (var filter in filters)
         {
             var column = filter!.Column;
