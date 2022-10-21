@@ -25,13 +25,13 @@ public class QueryParametersController : ControllerBase
             switch (filter!.Type)
             {
                 case "startswith":
-                    people = people.Where(obj => obj.GetType().GetProperty(column)!.GetValue(obj)!.ToString()!.StartsWith(filter.Value)).ToList();
+                    people = people.Where(x => x.GetType().GetProperty(column)!.GetValue(x)!.ToString()!.StartsWith(filter.Value)).ToList();
                     break;
                 case "endswith":
-                    people = people.Where(obj => obj.GetType().GetProperty(column)!.GetValue(obj)!.ToString()!.EndsWith(filter.Value)).ToList();
+                    people = people.Where(x => x.GetType().GetProperty(column)!.GetValue(x)!.ToString()!.EndsWith(filter.Value)).ToList();
                     break;
                 case "contains":
-                    people = people.Where(p => p.Egn.Contains(filter.Value)).ToList();
+                    people = people.Where(x => x.GetType().GetProperty(column)!.GetValue(x)!.ToString()!.Contains(filter.Value)).ToList();
                     break;
             }
 
