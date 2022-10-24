@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Newtonsoft.Json;
-using System.Reflection;
 
 namespace ModelBinding.Controllers;
 
@@ -12,46 +11,36 @@ public class QueryParametersController : ControllerBase
     [HttpGet]
     public IList<Person> Get([ModelBinder(BinderType = typeof(QueryParameterModelBinder))] QueryParameters queryParameters, IList<Person> people)
     {
-        people.Add(new Person(people.Count + 1, "Krava", "9402495038"));
+        people.Add(new Person(people.Count + 1, "Prava", "9402495038"));
         people.Add(new Person(people.Count + 1, "Slava", "9320574829"));
-        people.Add(new Person(people.Count + 1, "Prava", "9413072388"));
+        people.Add(new Person(people.Count + 1, "Krava", "9413072388"));
 
         List<FilterParameters?> filters = queryParameters.FilterParametersList.ToList();
 
         foreach (var filter in filters)
         {
-            var column = filter!.Column;
-
             switch (filter!.Type)
             {
                 case "startswith":
-                    people = people.Where(x => x.GetType().GetProperty(column)!.GetValue(x)!.ToString()!.StartsWith(filter.Value)).ToList();
+                    people = people.Where(x => x.GetType().GetProperty(filter.Column)!.GetValue(x)!.ToString()!.StartsWith(filter.Value)).ToList();
                     break;
                 case "endswith":
-                    people = people.Where(x => x.GetType().GetProperty(column)!.GetValue(x)!.ToString()!.EndsWith(filter.Value)).ToList();
+                    people = people.Where(x => x.GetType().GetProperty(filter.Column)!.GetValue(x)!.ToString()!.EndsWith(filter.Value)).ToList();
                     break;
                 case "contains":
-                    people = people.Where(x => x.GetType().GetProperty(column)!.GetValue(x)!.ToString()!.Contains(filter.Value)).ToList();
+                    people = people.Where(x => x.GetType().GetProperty(filter.Column)!.GetValue(x)!.ToString()!.Contains(filter.Value)).ToList();
                     break;
             }
-
         }
         
         if (queryParameters.Descending == true)
         {
-            var ordredResult = new List<Person>();
-
-            ordredResult = people.OrderByDescending(x => x.Id).ToList();
-
-            return ordredResult;
+            people = people.OrderByDescending(x => x.GetType().GetProperty(queryParameters.OrderBy)).ToList()!;
         }
 
         return people;
-
     }
-
     // TODO expressions, delegates, functions, lambdas
-
 }
 
 public class QueryParameterModelBinder : IModelBinder
